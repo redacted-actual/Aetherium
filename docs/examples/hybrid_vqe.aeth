@@ -1,0 +1,47 @@
+// hybrid_vqe.aeth: Hybrid Variational Quantum Eigensolver (VQE) for quantum chemistry.
+// Demonstrates hybrid quantum-classical optimization.
+
+use std::quantum::{Qubit, RX, RY, RZ, CNOT, Measure};
+use std::ai::{Optimizer, Loss};
+use std::linalg::Tensor;
+
+// Ansatz circuit (parameterized quantum circuit)
+fn vqe_ansatz(params: Tensor) -> Reversible<Qubit[2]> {
+    let q = Qubit[2]::init() @ qpu_fabric;
+
+    compute quantum {
+        q[0] = RX(q[0], params[0]);
+        q[0] = RY(q[0], params[1]);
+        q[1] = RX(q[1], params[2]);
+        q[1] = RY(q[1], params[3]);
+        q[1] = CNOT(q[0], q[1]); // Entangle
+        q[1] = RZ(q[1], params[4]);
+    }
+
+    return q;
+}
+
+// Hamiltonian expectation (simplified for H2 molecule)
+fn compute_energy(measurements: Tensor) -> f64 {
+    // Placeholder: Compute <psi| H |psi> from Pauli expectations
+    let zz = measurements[0]; // Example term
+    return -1.0 + 0.5 * zz; // Simplified Ising-like
+}
+
+// Main VQE loop (classical optimization of quantum params)
+fn main() {
+    let params = Tensor::randn([5]) @ host_mem; // Initial variational params
+    let opt = Optimizer::Adam(lr: 0.01);
+
+    for iter in 1..100 {
+        let circuit = vqe_ansatz(params);
+        let shots = Measure(circuit, shots: 1024, basis: "ZZ"); // Measure in ZZ basis
+        let energy = compute_energy(shots);
+
+        let loss = Loss::Custom(energy); // Minimize energy
+        let ∇params = ∇vqe_ansatz; // Differentiate through quantum (via parameter shift)
+        opt.step(loss, ∇params);
+
+        print(f"Iter {iter}: Energy = {energy}");
+    }
+}
