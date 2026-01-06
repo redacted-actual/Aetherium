@@ -1,6 +1,6 @@
 Aetherium (AETH) is a metamorphic, hardware-aware computational language designed to unify classical, differentiable, and quantum programming models into a single formally verified framework. Unlike traditional languages that separate logic from execution hardware, Aetherium treats the computational context as a first-class type property.
 Key Technical Attributes
-Metamorphic Type System: Functions and data structures inherit meta-types—Classical, Differentiable, Reversible, or Probabilistic. The compiler enforces mathematical constraints based on these types (e.g., ensuring a Reversible function contains only unitary quantum operations).
+Metamorphic Type System: Functions and data structures inherit meta-types: Classical, Differentiable, Reversible, or Probabilistic. The compiler enforces mathematical constraints based on these types (e.g., ensuring a Reversible function contains only unitary quantum operations).
 Hardware Pinning (@ Operator): Developers explicitly map data and compute blocks to abstract hardware targets such as @host_mem (CPU), @tensor_cores (GPU/TPU), or @qpu_fabric (Quantum Processor).
 Native Calculus Integration: Operators like ∇ (gradient) and ⊗ (tensor product) are compiler intrinsics. The compiler automatically generates backward passes for any logic marked Differentiable using high-performance algorithmic differentiation.
 Unified Memory & Graph Semantics: Aetherium natively supports Tensor structures and HyperGraph lattices, allowing seamless data flow between neural network layers and symbolic memory structures.
