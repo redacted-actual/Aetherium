@@ -1,0 +1,22 @@
+// bell_pair.aeth: Demonstrates Reversible quantum computing.
+
+use std::quantum::{Qubit, H, CNOT, Measure};
+
+// Provably Reversible function.
+fn create_bell_pair() -> Reversible<Qubit[2]> {
+    let q = Qubit[2]::init() @ qpu_fabric;
+
+    compute quantum {
+        q[0] = H(q[0]);         // Hadamard gate
+        q[1] = CNOT(q[0], q[1]); // CNOT gate
+    }
+
+    return q;
+}
+
+// Main program
+fn main() {
+    let bell_circuit = create_bell_pair();
+    let results = Measure(bell_circuit, shots: 1024); // Non-reversible op outside
+    print(results); // e.g., {"00": ~512, "11": ~512}
+}
