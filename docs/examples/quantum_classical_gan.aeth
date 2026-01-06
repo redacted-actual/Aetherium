@@ -1,0 +1,63 @@
+// quantum_classical_gan.aeth: Hybrid Quantum-Classical GAN.
+
+use std::ai::{Layer, Optimizer, Loss};
+use std::quantum::{Qubit, Gate, Measure};
+use std::linalg::Tensor;
+
+// Quantum Generator (Reversible -> Classical)
+struct QuantumGen(params: Tensor) -> Differentiable {
+    fn forward(self, noise: Tensor) -> Tensor {
+        let qubits = Qubit[4]::init() @ qpu_fabric;
+
+        compute quantum {
+            for i in 0..4 {
+                qubits[i].rx(noise[i]);
+                qubits[i].rz(self.params[i]); // Parameterized
+            }
+            // Entangle (CNOT ladder)
+            for i in 0..3 {
+                qubits[i+1] = CNOT(qubits[i], qubits[i+1]);
+            }
+        }
+
+        let result = Measure(qubits);
+        return result.to(@tensor_cores); // Move to GPU
+    }
+}
+
+// Classical Discriminator
+struct ClassicDisc(weights: Tensor) -> Differentiable {
+    fn forward(self, x: Tensor) -> Tensor {
+        compute @ tensor_cores {
+            let h = relu(x @ self.weights);
+            return sigmoid(h.sum());
+        }
+    }
+}
+
+// Main training loop
+fn main() {
+    let gen = QuantumGen::new();
+    let disc = ClassicDisc::new();
+    let opt_g = Optimizer::Adam(lr: 0.01);
+    let opt_d = Optimizer::SGD(lr: 0.05);
+
+    for epoch in 1..100 {
+        let real_data = load_batch() @ tensor_cores;
+        let noise = Tensor::randn([4]) @ host_mem;
+
+        let fake_data = gen.forward(noise);
+
+        let d_loss = Loss::BinaryCrossEntropy(disc.forward(fake_data), 0.0) +
+                     Loss::BinaryCrossEntropy(disc.forward(real_data), 1.0);
+
+        let ∇disc = ∇disc;
+        opt_d.step(d_loss, ∇disc);
+
+        let g_loss = Loss::BinaryCrossEntropy(disc.forward(gen.forward(noise)), 1.0);
+        let ∇gen = ∇gen;
+        opt_g.step(g_loss, ∇gen);
+
+        print(f"Epoch {epoch}: Loss D={d_loss}, Loss G={g_loss}");
+    }
+}
