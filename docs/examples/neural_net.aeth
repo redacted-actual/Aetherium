@@ -1,0 +1,41 @@
+// neural_net.aeth: Demonstrates a Differentiable neural network for AI/ML.
+
+use std::linalg::Tensor;
+use std::ai::{Loss, Optimizer};
+
+// Define a simple 2-layer network.
+// Explicitly inherits 'Differentiable' meta-type.
+struct SimpleNet(w1: Tensor, b1: Tensor, w2: Tensor, b2: Tensor) -> Differentiable {
+    fn forward(self, x: Tensor) -> Tensor {
+        let h = relu(x @ self.w1 + self.b1); // '@' is matrix multiply
+        return sigmoid(h @ self.w2 + self.b2);
+    }
+}
+
+// Main program
+fn main() {
+    // Initialize tensors
+    let w1 = Tensor::randn([784, 128]);
+    let b1 = Tensor::zeros([128]);
+    let w2 = Tensor::randn([128, 10]);
+    let b2 = Tensor::zeros([10]);
+
+    let model = SimpleNet(w1, b1, w2, b2);
+    let optimizer = Optimizer::Adam(learning_rate: 0.001);
+    let data_loader = load_mnist("path/to/data"); // Assume external loader
+
+    let ∇model = ∇model; // Auto-generate gradient function
+
+    for epoch in 1..=10 {
+        for (batch, labels) in data_loader {
+            let (loss, grads) = loss_with_grad(
+                model,
+                batch,
+                labels,
+                Loss::CrossEntropy
+            );
+            optimizer.step(&mut model, grads);
+        }
+        print(f"Epoch {epoch} complete. Loss: {loss.mean()}");
+    }
+}
