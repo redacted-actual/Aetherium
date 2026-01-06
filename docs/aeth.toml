@@ -1,0 +1,62 @@
+# aeth.toml: Example manifest for "QuantumLeap" package.
+# A library for quantum circuit optimization using Differentiable models.
+
+[package]
+name = "QuantumLeap"
+version = "0.2.0"
+authors = ["Dr. Eva Reinhardt <eva@aeth-research.org>"]
+description = "A library for quantum circuit optimization using Differentiable models."
+license = "MIT"
+repo = "https://github.com/aeth-research/quantumleap"
+
+[dependencies]
+aeth-std = "1.0"
+aeth-linalg = "1.5.0"
+aeth-prob = "0.8.1"
+q-optim = { version = "0.1.0", path = "../q-optim-utils" } # Local path dep
+
+[backends]
+# Declares supported hardware abstractions
+provides = ["@tensor_cores", "@qpu_fabric"]
+
+# Target-specific dependencies
+
+[target.@tensor_cores]
+# Applies to all tensor core backends
+
+[target.@tensor_cores.nvidia]
+sdk = { name = "cuda_toolkit", version = ">=12.0" }
+lib = { name = "cudnn", version = "8" }
+
+[target.@tensor_cores.amd]
+sdk = { name = "rocm_toolkit", version = ">=5.0" }
+
+[target.@qpu_fabric]
+# Quantum backend; falls back to simulator if no real hardware
+
+[target.@qpu_fabric.virtual]
+lib = { name = "aeth-qsim", version = "1.0" }
+
+[target.@qpu_fabric.ibm]
+sdk = { name = "qiskit", provider = "pip", version = "~=1.0" }
+api_key = { env = "IBM_Q_API_KEY" } # Pull from environment
+
+[target.@qpu_fabric.google]
+sdk = { name = "cirq", provider = "pip", version = "~=1.3" }
+
+# Build profiles
+
+[profile.dev]
+opt-level = 1
+debug = true
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+debug = false
+
+[profile.release.@tensor_cores]
+fast-math = true
+
+[profile.release.@qpu_fabric]
+fidelity-optimization = true
