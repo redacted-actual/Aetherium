@@ -1,0 +1,23 @@
+// hpc_simulation.aeth: Heterogeneous HPC with data pinning and streaming.
+
+fn run_simulation(host_data: BigDataSet) -> Stream<Results> {
+    let main_dataset = host_data @ host_mem;
+    let hot_kernel_data = main_dataset.subset("params") @ device_hbm;
+
+    stream (results) {
+        for step in 1..1000 {
+            let intermediate_state = compute_kernel(hot_kernel_data, step) @ tensor_cores;
+            yield intermediate_state.summarize(); // Implicit device->host transfer
+        }
+    }
+}
+
+// Main program (assume compute_kernel defined elsewhere)
+fn main() {
+    let data = load_big_dataset("path/to/data");
+    let sim_stream = run_simulation(data);
+
+    for result in sim_stream {
+        print(result);
+    }
+}
